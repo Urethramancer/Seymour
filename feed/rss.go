@@ -46,15 +46,15 @@ func NewRSS(data []byte) (*Feed, error) {
 	f.Summary = c.Summary
 	f.Description = c.Description
 	f.Categories = strings.Join(c.Categories, ", ")
-	f.Episodes = make(map[string]*Item)
-	for _, item := range x.Channels[0].Items {
-		t, err := time.Parse(time.RFC1123Z, item.ActualDate)
+	f.Episodes = make(map[string]*Episode)
+	for _, ep := range x.Channels[0].Items {
+		t, err := time.Parse(time.RFC1123Z, ep.ActualDate)
 		if err != nil {
 			return nil, err
 		}
-		item.Date = t
-		f.EpisodeList = append(f.EpisodeList, &item)
-		f.Episodes[item.Title] = &item
+		ep.Date = t
+		f.EpisodeList = append(f.EpisodeList, ep)
+		f.Episodes[ep.Title] = ep
 	}
 	t, err := time.Parse(time.RFC1123Z, c.Date)
 	if err != nil {

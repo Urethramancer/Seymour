@@ -16,17 +16,8 @@ type Feed struct {
 	Summary     string
 	Description string
 	Categories  string
-	EpisodeList []*Item
-	Episodes    map[string]*Item
-	Date        time.Time
-}
-
-type Episode struct {
-	Title       string
-	Subtitle    string
-	Summary     string
-	Description string
-	URL         string
+	EpisodeList []*Episode
+	Episodes    map[string]*Episode
 	Date        time.Time
 }
 
@@ -36,23 +27,23 @@ type RSSXML struct {
 }
 
 type Channel struct {
-	XMLName     xml.Name `xml:"channel"`
-	Title       string   `xml:"title"`
-	Website     string   `xml:"link"`
-	Language    string   `xml:"language"`
-	Copyright   string   `xml:"copyright"`
-	Subtitle    string   `xml:"subtitle"`
-	Author      string   `xml:"author"`
-	Summary     string   `xml:"summary"`
-	Description string   `xml:"description"`
-	Explicit    string   `xml:"explicit"`
-	Image       string   `xml:"image"`
-	Categories  []string `xml:"category"`
-	Items       []Item   `xml:"item"`
-	Date        string   `xml:"pubDate"`
+	XMLName     xml.Name   `xml:"channel"`
+	Title       string     `xml:"title"`
+	Website     string     `xml:"link"`
+	Language    string     `xml:"language"`
+	Copyright   string     `xml:"copyright"`
+	Subtitle    string     `xml:"subtitle"`
+	Author      string     `xml:"author"`
+	Summary     string     `xml:"summary"`
+	Description string     `xml:"description"`
+	Explicit    string     `xml:"explicit"`
+	Image       string     `xml:"image"`
+	Categories  []string   `xml:"category"`
+	Items       []*Episode `xml:"item"`
+	Date        string     `xml:"pubDate"`
 }
 
-type Item struct {
+type Episode struct {
 	XMLName     xml.Name  `xml:"item"`
 	Title       string    `xml:"title"`
 	Author      string    `xml:"author"`
