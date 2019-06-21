@@ -56,16 +56,15 @@ func NewRSS(data []byte) (*Feed, error) {
 		f.EpisodeList = append(f.EpisodeList, ep)
 		f.Episodes[ep.Title] = ep
 	}
-	t, err := time.Parse(time.RFC1123Z, c.Date)
+	var t time.Time
+	if c.Date == "" {
+		t = time.Now()
+	} else {
+		t, err = time.Parse(time.RFC1123Z, c.Date)
+	}
 	if err != nil {
 		return nil, err
 	}
 	f.Date = t
 	return &f, err
-}
-
-func NewRSSFromFile(filename string) (*Feed, error) {
-	var feed Feed
-
-	return &feed, nil
 }
