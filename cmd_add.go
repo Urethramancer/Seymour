@@ -2,13 +2,13 @@ package main
 
 import (
 	"errors"
-	"io"
-	"net/http"
+	"path/filepath"
+	"strings"
+	"time"
 
-	"github.com/Urethramancer/Seymour/feed"
+	"github.com/Urethramancer/cross"
 	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/opt"
-	"github.com/Urethramancer/signor/stringer"
 )
 
 type CmdAdd struct {
@@ -21,28 +21,28 @@ func (cmd *CmdAdd) Run(args []string) error {
 		return errors.New(opt.ErrorUsage)
 	}
 
-	rss, err := downloadPodcast(cmd.URL)
+	rss, err := fetchFeed(cmd.URL)
 	if err != nil {
 		return err
 	}
+
 	m := log.Default.Msg
 	m("%s has %d episodes and was last updated %s", rss.Title, len(rss.EpisodeList), rss.Date.String())
 
+	p := Podcast{
+		Title:     rss.Title,
+		URL:       cmd.URL,
+		Updated:   rss.Date,
+		Frequency: time.Hour * 6,
+	}
+
+	fn := strings.ReplaceAll(p.Title, " ", "-")
+	fn = filepath.Join(cross.ConfigPath(), feedpath, fn)
+	err = SaveJSON(fn, p)
+	if err != nil {
+		return err
+	}
+
+	m("Saved %s", fn)
 	return nil
-}
-
-func downloadPodcast(url string) (*feed.Feed, error) {
-	r, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Body.Close()
-
-	s := stringer.New()
-	_, err = io.Copy(s, r.Body)
-	if err != nil {
-		return nil, err
-	}
-	f, err := feed.NewRSS([]byte(s.String()))
-	return f, err
 }
