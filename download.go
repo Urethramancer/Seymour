@@ -28,8 +28,8 @@ func fetchFeed(url string) (*feed.Feed, error) {
 }
 
 func podcastName(s string) string {
-	fn := strings.ReplaceAll(s, " ", "-")
-	fn = strings.ReplaceAll(s, "'", "-")
+	fn := strings.ReplaceAll(s, "'", "-")
+	fn = strings.ReplaceAll(s, "/", "-")
 	return fn
 }
 
