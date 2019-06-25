@@ -3,8 +3,11 @@ package main
 import (
 	"io"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/Urethramancer/Seymour/feed"
+	"github.com/Urethramancer/cross"
 	"github.com/Urethramancer/signor/stringer"
 )
 
@@ -22,4 +25,10 @@ func fetchFeed(url string) (*feed.Feed, error) {
 	}
 
 	return feed.NewRSS([]byte(s.String()))
+}
+
+func feedFile(s string) string {
+	fn := strings.ReplaceAll(s, " ", "-")
+	fn = filepath.Join(cross.ConfigPath(), feedpath, fn)
+	return fn
 }
