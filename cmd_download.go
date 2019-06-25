@@ -100,8 +100,20 @@ func downloadEpisodes(podcast, path string, latest, all bool) error {
 
 	if all || p.LastDownload == "" {
 		m("\tDownloading all %d episodes.", len(rss.EpisodeList))
+		for _, ep := range rss.EpisodeList {
+			err = downloadEpisode((ep), path)
+			if err != nil {
+				return err
+			}
+		}
+
 		p.LastDownload = rss.EpisodeList[0].Title
 		SaveJSON(fn, p)
+		return nil
+	}
+
+	if !all && p.LastDownload == rss.EpisodeList[0].Title {
+		m("No new downloads since %s.", p.LastDownload)
 		return nil
 	}
 
