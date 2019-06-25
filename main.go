@@ -44,6 +44,10 @@ func main() {
 	}
 	err := a.RunCommand(false)
 	if err != nil {
-		a.Usage()
+		if err.Error() == opt.ErrorUsage {
+			a.Usage()
+		} else {
+			log.Default.Err("Error running command: %s", err.Error())
+		}
 	}
 }
