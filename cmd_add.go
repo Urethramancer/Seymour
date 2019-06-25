@@ -2,11 +2,7 @@ package main
 
 import (
 	"errors"
-	"path/filepath"
-	"strings"
-	"time"
 
-	"github.com/Urethramancer/cross"
 	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/opt"
 )
@@ -21,6 +17,11 @@ func (cmd *CmdAdd) Run(args []string) error {
 		return errors.New(opt.ErrorUsage)
 	}
 
+	cfg, err := loadConfig()
+	if err != nil {
+		return err
+	}
+
 	rss, err := fetchFeed(cmd.URL)
 	if err != nil {
 		return err
@@ -33,11 +34,10 @@ func (cmd *CmdAdd) Run(args []string) error {
 		Title:     rss.Title,
 		URL:       cmd.URL,
 		Updated:   rss.Date,
-		Frequency: time.Hour * 6,
+		Frequency: cfg.Frequency,
 	}
 
-	fn := strings.ReplaceAll(p.Title, " ", "-")
-	fn = filepath.Join(cross.ConfigPath(), feedpath, fn)
+	fn := feedFile(p.Title)
 	err = SaveJSON(fn, p)
 	if err != nil {
 		return err
