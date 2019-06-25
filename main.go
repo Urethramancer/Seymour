@@ -1,8 +1,6 @@
 package main
 
 import (
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -46,24 +44,6 @@ func main() {
 	}
 	err := a.RunCommand(false)
 	if err != nil {
-		log.Default.Msg("Error: %s", err.Error())
+		a.Usage()
 	}
-}
-
-func download(url string) error {
-	r, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	file, err := os.Create("output")
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	n, err := io.Copy(file, r.Body)
-	log.Default.Msg("Fetched %d bytes", n)
-	return nil
 }

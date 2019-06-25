@@ -56,11 +56,3 @@ func (cmd *CmdList) Run(args []string) error {
 	tw.Flush()
 	return nil
 }
-
-func maxLen(s string, x int) int {
-	if len(s) > x {
-		return len(s)
-	}
-
-	return x
-}
