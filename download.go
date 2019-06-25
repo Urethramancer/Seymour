@@ -27,8 +27,14 @@ func fetchFeed(url string) (*feed.Feed, error) {
 	return feed.NewRSS([]byte(s.String()))
 }
 
-func feedFile(s string) string {
+func podcastName(s string) string {
 	fn := strings.ReplaceAll(s, " ", "-")
+	fn = strings.ReplaceAll(s, "'", "-")
+	return fn
+}
+
+func feedFile(s string) string {
+	fn := podcastName(s)
 	fn = filepath.Join(cross.ConfigPath(), feedpath, fn)
 	return fn
 }
