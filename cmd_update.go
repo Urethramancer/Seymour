@@ -2,7 +2,12 @@ package main
 
 import (
 	"errors"
+	"io/ioutil"
+	"path/filepath"
+	"time"
 
+	"github.com/Urethramancer/cross"
+	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/opt"
 )
 
@@ -16,9 +21,51 @@ func (cmd *CmdUpdate) Run(args []string) error {
 		return errors.New(opt.ErrorUsage)
 	}
 
+	if cmd.Name != "" {
+		return updatePodcast(cmd.Name)
+	}
+
+	fp := filepath.Join(cross.ConfigPath(), feedpath)
+	files, err := ioutil.ReadDir(fp)
+	if err != nil {
+		return err
+	}
+
+	for _, f := range files {
+		updatePodcast(f.Name())
+	}
 	return nil
 }
 
-func updatePodcast(name string) {
+func updatePodcast(name string) error {
+	fn := feedFile(name)
+	var p Podcast
+	err := LoadJSON(fn, &p)
+	if err != nil {
+		return err
+	}
 
+	m := log.Default.Msg
+	m("%s:", p.Title)
+
+	t := p.Updated.Add(p.Frequency)
+	if !time.Now().After(t) {
+		log.Default.Msg("\tUp to date.")
+		return nil
+	}
+
+	rss, err := fetchFeed(p.URL)
+	if err != nil {
+		return err
+	}
+
+	p.Updated = time.Now()
+	p.MostRecent = rss.EpisodeList[0].Title
+	err = SaveJSON(fn, p)
+	if err != nil {
+		return err
+	}
+
+	m("\tUpdated.")
+	return nil
 }
