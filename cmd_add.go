@@ -31,10 +31,11 @@ func (cmd *CmdAdd) Run(args []string) error {
 	m("%s has %d episodes and was last updated %s", rss.Title, len(rss.EpisodeList), rss.Date.String())
 
 	p := Podcast{
-		Title:     rss.Title,
-		URL:       cmd.URL,
-		Updated:   rss.Date,
-		Frequency: cfg.Frequency,
+		Title:      rss.Title,
+		URL:        cmd.URL,
+		Updated:    rss.Date,
+		Frequency:  cfg.Frequency,
+		MostRecent: rss.EpisodeList[0].Title,
 	}
 
 	fn := feedFile(p.Title)
