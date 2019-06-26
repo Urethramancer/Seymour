@@ -18,8 +18,8 @@ type CmdList struct {
 	opt.DefaultHelp
 	Full    bool   `short:"f" long:"full" help:"Full details listing."`
 	Podcast string `placeholder:"PODCAST" help:"Optional podcast to list episodes from."`
-	Since   string `short:"s" long:"since" help:"Date-time to list episodes since."`
-	Period  string `short:"p" long:"period" help:"Period of time to go back for episode lists."`
+	TimeSince
+	TimePeriod
 }
 
 func (cmd *CmdList) Run(args []string) error {
