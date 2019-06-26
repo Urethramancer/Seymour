@@ -6,8 +6,6 @@ import (
 	"text/scanner"
 	"time"
 	"unicode"
-
-	"github.com/Urethramancer/signor/log"
 )
 
 // TimeSince a specific point.
@@ -44,7 +42,6 @@ func parsePeriod(period string) time.Duration {
 			n = int64(x)
 		}
 	}
-	log.Default.Msg("%s", d.String())
 	return d
 }
 
