@@ -25,14 +25,17 @@ func (cmd *CmdUpdate) Run(args []string) error {
 		return updatePodcast(cmd.Name)
 	}
 
-	fp := filepath.Join(cross.ConfigPath(), feedpath)
+	fp := filepath.Join(cross.ConfigPath(), podpath)
 	files, err := ioutil.ReadDir(fp)
 	if err != nil {
 		return err
 	}
 
 	for _, f := range files {
-		updatePodcast(f.Name())
+		err = updatePodcast(f.Name())
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

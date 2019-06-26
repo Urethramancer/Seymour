@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -24,12 +25,35 @@ func fetchFeed(url string) (*feed.Feed, error) {
 		return nil, err
 	}
 
-	return feed.NewRSS([]byte(s.String()))
+	rss, err := feed.NewRSS([]byte(s.String()))
+	if err != nil {
+		return nil, err
+	}
+
+	fn := feedFile(rss.Title)
+	f, err := os.Create(fn)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = f.WriteString(s.String())
+	if err != nil {
+		return nil, err
+	}
+
+	return rss, nil
 }
 
 func podcastName(s string) string {
-	fn := strings.ReplaceAll(s, "'", "-")
-	fn = strings.ReplaceAll(s, "/", "-")
+	fn := strings.ReplaceAll(s, " ", "")
+	fn = strings.ReplaceAll(fn, "'", "")
+	fn = strings.ReplaceAll(fn, "/", "")
+	return fn
+}
+
+func podFile(s string) string {
+	fn := podcastName(s)
+	fn = filepath.Join(cross.ConfigPath(), podpath, fn)
 	return fn
 }
 

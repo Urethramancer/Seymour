@@ -39,7 +39,7 @@ func (cmd *CmdAdd) Run(args []string) error {
 			MostRecent: rss.EpisodeList[0].Title,
 		}
 
-		fn := feedFile(p.Title)
+		fn := podFile(p.Title)
 		err = SaveJSON(fn, p)
 		if err != nil {
 			return err

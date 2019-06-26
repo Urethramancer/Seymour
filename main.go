@@ -12,6 +12,7 @@ import (
 const (
 	program  = "Seymour"
 	feedpath = "feeds"
+	podpath  = "podcasts"
 )
 
 var Options struct {
@@ -30,7 +31,16 @@ func init() {
 	if !cross.DirExists(fp) {
 		err := os.MkdirAll(fp, 0755)
 		if err != nil {
-			log.Default.Err("Error creating %s: %s", cross.ConfigPath(), err.Error())
+			log.Default.Err("Error creating %s: %s", fp, err.Error())
+			os.Exit(2)
+		}
+	}
+
+	pp := filepath.Join(cross.ConfigPath(), podpath)
+	if !cross.DirExists(pp) {
+		err := os.MkdirAll(pp, 0755)
+		if err != nil {
+			log.Default.Err("Error creating %s: %s", pp, err.Error())
 			os.Exit(2)
 		}
 	}
