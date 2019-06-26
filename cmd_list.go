@@ -96,6 +96,5 @@ func listPodcast(name string, full bool, since time.Time) error {
 		}
 		m("\t%s: %s", ep.Date.String(), ep.Title)
 	}
-	m("Since %s", since.String())
 	return nil
 }
