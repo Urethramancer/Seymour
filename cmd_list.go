@@ -7,14 +7,19 @@ import (
 	"os"
 	"path/filepath"
 	"text/tabwriter"
+	"time"
 
 	"github.com/Urethramancer/cross"
+	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/opt"
 )
 
 type CmdList struct {
 	opt.DefaultHelp
-	Full bool `short:"f" long:"full" help:"Full details listing."`
+	Full    bool   `short:"f" long:"full" help:"Full details listing."`
+	Podcast string `placeholder:"PODCAST" help:"Optional podcast to list episodes from."`
+	Since   string `short:"s" long:"since" help:"Date-time to list episodes since."`
+	Period  string `short:"p" long:"period" help:"Period of time to go back for episode lists."`
 }
 
 func (cmd *CmdList) Run(args []string) error {
@@ -22,7 +27,27 @@ func (cmd *CmdList) Run(args []string) error {
 		return errors.New(opt.ErrorUsage)
 	}
 
-	fp := filepath.Join(cross.ConfigPath(), feedpath)
+	var err error
+	if cmd.Podcast != "" {
+		t := time.Time{}
+		if cmd.Since != "" {
+			t, err = time.Parse(time.RFC1123Z, cmd.Since)
+			if err != nil {
+				return err
+			}
+		}
+
+		if cmd.Period != "" {
+			d, err := time.ParseDuration(cmd.Period)
+			if err != nil {
+				return err
+			}
+			t = time.Now().Add(-d)
+		}
+		return listPodcast(cmd.Podcast, cmd.Full, t)
+	}
+
+	fp := filepath.Join(cross.ConfigPath(), podpath)
 	files, err := ioutil.ReadDir(fp)
 	if err != nil {
 		return err
@@ -54,5 +79,10 @@ func (cmd *CmdList) Run(args []string) error {
 	}
 
 	tw.Flush()
+	return nil
+}
+
+func listPodcast(name string, full bool, since time.Time) error {
+	log.Default.Msg("%s", since.String())
 	return nil
 }
