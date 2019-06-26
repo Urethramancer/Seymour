@@ -41,7 +41,7 @@ func (cmd *CmdUpdate) Run(args []string) error {
 }
 
 func updatePodcast(name string) error {
-	fn := feedFile(name)
+	fn := podFile(name)
 	var p Podcast
 	err := LoadJSON(fn, &p)
 	if err != nil {
