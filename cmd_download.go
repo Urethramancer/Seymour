@@ -25,6 +25,8 @@ type CmdDownload struct {
 	Latest bool `short:"l" long:"latest" help:"Download only the latest episode."`
 	// Name of single podcast to download episodes from.
 	Name string `placeholder:"NAME" help:"Podcast to download."`
+	TimeSince
+	TimePeriod
 }
 
 func (cmd *CmdDownload) Run(args []string) error {
@@ -180,7 +182,10 @@ func downloadEpisode(ep *feed.Episode, path string) error {
 		return err
 	}
 
-	io.Copy(f, src)
+	_, err = io.Copy(f, src)
+	if err != nil {
+		return err
+	}
 	fmt.Println("")
 	return nil
 }
