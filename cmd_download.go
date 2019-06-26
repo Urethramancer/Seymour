@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/Urethramancer/Seymour/feed"
 	"github.com/Urethramancer/cross"
@@ -42,7 +43,7 @@ func (cmd *CmdDownload) Run(args []string) error {
 	}
 
 	if cmd.Name != "" {
-		return downloadEpisodes(cmd.Name, cfg.DownloadPath, cmd.Latest, cmd.All)
+		return downloadEpisodes(cmd.Name, cfg.DownloadPath, cmd.Since, cmd.Period, cmd.Latest, cmd.All)
 	}
 
 	fp := filepath.Join(cross.ConfigPath(), feedpath)
@@ -52,7 +53,7 @@ func (cmd *CmdDownload) Run(args []string) error {
 	}
 
 	for _, f := range files {
-		err = downloadEpisodes(f.Name(), cfg.DownloadPath, cmd.Latest, cmd.All)
+		err = downloadEpisodes(f.Name(), cfg.DownloadPath, cmd.Since, cmd.Period, cmd.Latest, cmd.All)
 		if err != nil {
 			return err
 		}
@@ -61,10 +62,24 @@ func (cmd *CmdDownload) Run(args []string) error {
 	return nil
 }
 
-func downloadEpisodes(podcast, path string, latest, all bool) error {
+func downloadEpisodes(podcast, path, since, period string, latest, all bool) error {
+	var err error
+	t := time.Time{}
+	if since != "" {
+		t, err = time.Parse(time.RFC1123Z, since)
+		if err != nil {
+			return err
+		}
+	}
+
+	if period != "" {
+		d := parsePeriod(period)
+		t = time.Now().Add(-d)
+	}
+
 	var p Podcast
-	fn := feedFile(podcast)
-	err := LoadJSON(fn, &p)
+	fn := podFile(podcast)
+	err = LoadJSON(fn, &p)
 	if err != nil {
 		return err
 	}
@@ -79,7 +94,7 @@ func downloadEpisodes(podcast, path string, latest, all bool) error {
 
 	m := log.Default.Msg
 	m("Downloading %s (last updated %s)", p.Title, p.Updated.String())
-	rss, err := fetchFeed(p.URL)
+	rss, err := feed.NewRSSFromFile(feedFile(p.Title))
 	if err != nil {
 		return err
 	}
@@ -101,8 +116,12 @@ func downloadEpisodes(podcast, path string, latest, all bool) error {
 	}
 
 	if all || p.LastDownload == "" {
-		m("\tDownloading all %d episodes.", len(rss.EpisodeList))
+		m("\tDownloading all back to %s (%d episodes available).", t.String(), len(rss.EpisodeList))
 		for _, ep := range rss.EpisodeList {
+			if ep.Date.Before(t) {
+				break
+			}
+
 			err = downloadEpisode((ep), path)
 			if err != nil {
 				return err
@@ -114,14 +133,14 @@ func downloadEpisodes(podcast, path string, latest, all bool) error {
 		return nil
 	}
 
-	if !all && p.LastDownload == rss.EpisodeList[0].Title {
+	if !all && p.LastDownload == rss.EpisodeList[0].Title && since == "" && period == "" {
 		m("No new downloads since %s.", p.LastDownload)
 		return nil
 	}
 
 	var dlist []*feed.Episode
 	for _, ep := range rss.EpisodeList {
-		if ep.Title == p.LastDownload {
+		if ep.Title == p.LastDownload && since == "" && period == "" {
 			break
 		}
 		dlist = append(dlist, ep)
@@ -132,23 +151,26 @@ func downloadEpisodes(podcast, path string, latest, all bool) error {
 		return nil
 	}
 
-	if len(dlist) == 1 {
-		m("\tDownloading %s.", rss.EpisodeList[0].Title)
+	if since == "" && period == "" {
+		m("\tDownloading the newest episodes.", len(dlist))
 	} else {
-		m("\tDownloading the %d newest episodes.", len(dlist))
+		m("\tDownloading the newest episodes since %s.", t.String())
 	}
 
-	p.LastDownload = dlist[0].Title
-	m("Saving %s", fn)
-	SaveJSON(fn, p)
-
 	for _, ep := range dlist {
+		if ep.Date.Before(t) {
+			break
+		}
+
 		err = downloadEpisode(ep, path)
 		if err != nil {
 			return err
 		}
 	}
 
+	p.LastDownload = dlist[0].Title
+	m("Saving %s", fn)
+	SaveJSON(fn, p)
 	return nil
 }
 
