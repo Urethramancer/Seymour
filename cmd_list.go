@@ -9,6 +9,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/Urethramancer/Seymour/feed"
+
 	"github.com/Urethramancer/cross"
 	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/opt"
@@ -38,10 +40,7 @@ func (cmd *CmdList) Run(args []string) error {
 		}
 
 		if cmd.Period != "" {
-			d, err := time.ParseDuration(cmd.Period)
-			if err != nil {
-				return err
-			}
+			d := parsePeriod(cmd.Period)
 			t = time.Now().Add(-d)
 		}
 		return listPodcast(cmd.Podcast, cmd.Full, t)
@@ -83,6 +82,20 @@ func (cmd *CmdList) Run(args []string) error {
 }
 
 func listPodcast(name string, full bool, since time.Time) error {
-	log.Default.Msg("%s", since.String())
+	fn := feedFile(name)
+	rss, err := feed.NewRSSFromFile(fn)
+	if err != nil {
+		return err
+	}
+
+	m := log.Default.Msg
+	m("%s episodes:", rss.Title)
+	for _, ep := range rss.EpisodeList {
+		if ep.Date.Before(since) {
+			return nil
+		}
+		m("\t%s: %s", ep.Date.String(), ep.Title)
+	}
+	m("Since %s", since.String())
 	return nil
 }
