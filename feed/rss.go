@@ -3,6 +3,7 @@ package feed
 import (
 	"encoding/xml"
 	"errors"
+	"io/ioutil"
 	"reflect"
 	"strings"
 	"time"
@@ -24,6 +25,17 @@ func IsRSS(s string) bool {
 	}
 }
 
+// NewRSSFromFile reads the entire feed file into memory and unmarshals it.
+func NewRSSFromFile(name string) (*Feed, error) {
+	data, err := ioutil.ReadFile(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewRSS(data)
+}
+
+// NewRSS unmarshals a provided feed from XML.
 func NewRSS(data []byte) (*Feed, error) {
 	if !IsRSS(string(data)) {
 		return nil, errors.New(("not an RSS feed"))
