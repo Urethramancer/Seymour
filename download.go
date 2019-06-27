@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/Urethramancer/Seymour/feed"
 	"github.com/Urethramancer/cross"
+	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/stringer"
 )
 
@@ -19,8 +21,20 @@ func fetchFeed(url string) (*feed.Feed, error) {
 	}
 	defer r.Body.Close()
 
+	size, err := strconv.Atoi(r.Header.Get("Content-Length"))
+	if err != nil {
+		return nil, err
+	}
+
+	src := &Counter{
+		Reader: r.Body,
+		Name:   url,
+		Length: int64(size),
+	}
+
 	s := stringer.New()
-	_, err = io.Copy(s, r.Body)
+	_, err = io.Copy(s, src)
+	log.Default.Msg("")
 	if err != nil {
 		return nil, err
 	}
