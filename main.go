@@ -17,7 +17,8 @@ const (
 
 var Options struct {
 	opt.DefaultHelp
-	Add      CmdAdd      `command:"add" aliases:"a" help:"Add podcast."`
+	Add      CmdAdd      `command:"add" aliases:"a" help:"Add podcast(s)."`
+	Remove   CmdRemove   `command:"remove" aliases:"rm,delete,del" help:"Delete podcast(s)."`
 	List     CmdList     `command:"list" aliases:"ls,l" help:"List podcasts."`
 	Update   CmdUpdate   `command:"update" aliases:"up,u" help:"Update episode list for podcast(s)."`
 	Download CmdDownload `command:"download" aliases:"dl" help:"Download episode(s) for podcast(s)."`
