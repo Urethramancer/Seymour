@@ -1,64 +1,36 @@
 package main
 
 import (
+	"fmt"
 	"os"
-	"path/filepath"
 
-	"github.com/Urethramancer/cross"
-	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/opt"
 )
 
-const (
-	program  = "Seymour"
-	feedpath = "feeds"
-	podpath  = "podcasts"
-)
-
-var Options struct {
+var o struct {
 	opt.DefaultHelp
-	Add      CmdAdd      `command:"add" aliases:"a" help:"Add podcast(s)."`
-	Remove   CmdRemove   `command:"remove" aliases:"rm,delete,del" help:"Delete podcast(s)."`
-	List     CmdList     `command:"list" aliases:"ls,l" help:"List podcasts."`
-	Update   CmdUpdate   `command:"update" aliases:"up,u" help:"Update episode list for podcast(s)."`
-	Download CmdDownload `command:"download" aliases:"dl" help:"Download episode(s) for podcast(s)."`
-	Set      CmdSet      `command:"set" help:"Set configuration options."`
-	Get      CmdGet      `command:"get" help:"Get configuration options."`
-}
-
-func init() {
-	cross.SetConfigPath(program)
-	fp := filepath.Join(cross.ConfigPath(), feedpath)
-	if !cross.DirExists(fp) {
-		err := os.MkdirAll(fp, 0755)
-		if err != nil {
-			log.Default.Err("Error creating %s: %s", fp, err.Error())
-			os.Exit(2)
-		}
-	}
-
-	pp := filepath.Join(cross.ConfigPath(), podpath)
-	if !cross.DirExists(pp) {
-		err := os.MkdirAll(pp, 0755)
-		if err != nil {
-			log.Default.Err("Error creating %s: %s", pp, err.Error())
-			os.Exit(2)
-		}
-	}
+	Add      AddCmd      `command:"add" help:"Add a podcast."`
+	Remove   RemoveCmd   `command:"remove" aliases:"rm" help:"Remove a podcast."`
+	List     ListCmd     `command:"list" aliases:"ls" help:"List podcasts or episodes."`
+	Update   UpdateCmd   `command:"update" aliases:"up" help:"Update podcast(s)."`
+	Download DownloadCmd `command:"downlaod" aliases:"dl" help:"Download podcast episodes."`
 }
 
 func main() {
-	a := opt.Parse(&Options)
-	if Options.Help {
+	a := opt.Parse(&o)
+	if o.Help {
 		a.Usage()
 		return
 	}
+
 	err := a.RunCommand(false)
 	if err != nil {
-		if err.Error() == opt.ErrorUsage {
+		if err == opt.ErrNoCommand {
 			a.Usage()
-		} else {
-			log.Default.Err("Error running command: %s", err.Error())
+			return
 		}
+
+		fmt.Printf("Error running command: %s\n", err.Error())
+		os.Exit(2)
 	}
 }

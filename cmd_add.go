@@ -1,51 +1,64 @@
+// Copyright (c) 2021 Ronny Bangsund
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 package main
 
 import (
-	"errors"
+	"fmt"
+	"os"
+	"strings"
 
-	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/opt"
 )
 
-type CmdAdd struct {
+// AddCmd options.
+type AddCmd struct {
 	opt.DefaultHelp
-	URL []string `placeholder:"URL" help:"URL to the feed."`
+	URL  string `placeholder:"URL" help:"Address of feed to add. If a podcast with the same title exists, the feed is replaced."`
+	List bool   `short:"l" long:"list" help:"The URL is instead a file with a URL per line to import feeds from."`
 }
 
-func (cmd *CmdAdd) Run(args []string) error {
-	if cmd.Help || len(cmd.URL) == 0 {
-		return errors.New(opt.ErrorUsage)
+func (cmd *AddCmd) Run(in []string) error {
+	if cmd.Help || cmd.URL == "" {
+		return opt.ErrUsage
 	}
 
-	cfg, err := loadConfig()
+	list := getPodcastList()
+	if cmd.List {
+		data, err := os.ReadFile(cmd.URL)
+		if err != nil {
+			return err
+		}
+
+		urls := strings.Split(string(data), "\n")
+		for _, u := range urls {
+			if u == "" {
+				continue
+			}
+
+			fmt.Printf("Adding %s\n", u)
+			pod, err := list.AddFeed(u)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Added %s with %d episodes.\n\n", pod.Name, len(pod.Episodes))
+		}
+	} else {
+		pod, err := list.AddFeed(cmd.URL)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Added %s with %d episodes.\n", pod.Name, len(pod.Episodes))
+	}
+
+	err := list.Save()
 	if err != nil {
 		return err
 	}
 
-	for _, url := range cmd.URL {
-		rss, err := fetchFeed(url)
-		if err != nil {
-			return err
-		}
-
-		m := log.Default.Msg
-		m("%s has %d episodes and was last updated %s", rss.Title, len(rss.EpisodeList), rss.Date.String())
-
-		p := Podcast{
-			Title:      rss.Title,
-			URL:        url,
-			Updated:    rss.Date,
-			Frequency:  cfg.Frequency,
-			MostRecent: rss.EpisodeList[0].Title,
-		}
-
-		fn := podFile(p.Title)
-		err = SaveJSON(fn, p)
-		if err != nil {
-			return err
-		}
-
-		m("Saved %s", fn)
-	}
 	return nil
 }

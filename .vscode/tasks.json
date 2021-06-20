@@ -1,11 +1,8 @@
 {
 	"version": "2.0.0",
 	"type": "shell",
-	"problemMatcher": [
-		"$go"
-	],
-	"tasks": [
-		{
+	"problemMatcher": ["$go"],
+	"tasks": [{
 			"label": "Build Release",
 			"command": "go",
 			"args": [

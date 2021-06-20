@@ -1,58 +1,34 @@
+// Copyright (c) 2021 Ronny Bangsund
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 package main
 
 import (
-	"errors"
-	"os"
+	"fmt"
 
-	"github.com/Urethramancer/cross"
-
-	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/opt"
 )
 
-// CmdRemove deletes podcasts and feeds.
-type CmdRemove struct {
+// RemoveCmd options.
+type RemoveCmd struct {
 	opt.DefaultHelp
-	FeedOnly bool     `short:"f" long:"feedonly" help:"Only delete the downloaded feed."`
-	Name     []string `placeholder:"PODCAST" help:"Name of podcast."`
+	Podcast string `placeholder:"PODCAST" help:"Name of podcast to remove (exact match)."`
 }
 
-// Run removal.
-func (cmd *CmdRemove) Run(args []string) error {
-	if cmd.Help || len(cmd.Name) == 0 {
-		return errors.New(opt.ErrorUsage)
+func (cmd *RemoveCmd) Run(in []string) error {
+	if cmd.Help || cmd.Podcast == "" {
+		return opt.ErrUsage
 	}
 
-	var err error
-	m := log.Default.Msg
-	for _, podcast := range cmd.Name {
-		m("%s:", podcast)
-		fn := feedFile(podcast)
-		if cross.FileExists(fn) {
-			err = os.Remove(fn)
-			if err != nil {
-				return err
-			}
-			m("Removed %s", fn)
-		} else {
-			m("Unknown podcast '%s'", podcast)
-		}
-
-		if cmd.FeedOnly {
-			continue
-		}
-
-		fn = podFile(podcast)
-		if cross.FileExists(fn) {
-			err = os.Remove(fn)
-			if err != nil {
-				return err
-			}
-			m("Removed %s", fn)
-		} else {
-			m("Unknown podcast '%s'", podcast)
-		}
+	list := getPodcastList()
+	pod, ok := list.List[cmd.Podcast]
+	if !ok {
+		return unknownPodcast(cmd.Podcast)
 	}
-	m("\nDone.")
-	return nil
+
+	fmt.Printf("Removed %s\n", pod.Name)
+	delete(list.List, pod.Name)
+	return list.Save()
 }

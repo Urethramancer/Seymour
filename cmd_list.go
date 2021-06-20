@@ -1,100 +1,48 @@
+// Copyright (c) 2021 Ronny Bangsund
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 package main
 
 import (
-	"errors"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"text/tabwriter"
-	"time"
+	"strings"
 
-	"github.com/Urethramancer/Seymour/feed"
-
-	"github.com/Urethramancer/cross"
-	"github.com/Urethramancer/signor/log"
 	"github.com/Urethramancer/signor/opt"
 )
 
-type CmdList struct {
+// ListCmd options.
+type ListCmd struct {
 	opt.DefaultHelp
-	Full    bool   `short:"f" long:"full" help:"Full details listing."`
-	Podcast string `placeholder:"PODCAST" help:"Optional podcast to list episodes from."`
-	TimeSince
-	TimePeriod
+	Name string `placeholder:"PODCAST" help:"Specifying the name of a podcast lists its episodes instead."`
 }
 
-func (cmd *CmdList) Run(args []string) error {
+func (cmd *ListCmd) Run(in []string) error {
 	if cmd.Help {
-		return errors.New(opt.ErrorUsage)
+		return opt.ErrUsage
 	}
 
-	var err error
-	if cmd.Podcast != "" {
-		t := time.Time{}
-		if cmd.Since != "" {
-			t, err = time.Parse(time.RFC1123Z, cmd.Since)
-			if err != nil {
-				return err
+	list := getPodcastList()
+	if cmd.Name != "" {
+		needle := strings.ToLower(cmd.Name)
+		for k, pod := range list.List {
+			haystack := strings.ToLower(k)
+			if strings.Contains(haystack, needle) {
+				fmt.Printf("%s - %d episodes:\n", pod.Name, len(pod.Episodes))
+				for _, ep := range pod.Episodes {
+					fmt.Printf("\t%s (%s)\n", ep.Name, ep.Updated)
+				}
+				println()
+				return nil
 			}
 		}
 
-		if cmd.Period != "" {
-			d := parsePeriod(cmd.Period)
-			t = time.Now().Add(-d)
-		}
-		return listPodcast(cmd.Podcast, cmd.Full, t)
+		return unknownPodcast(cmd.Name)
 	}
 
-	fp := filepath.Join(cross.ConfigPath(), podpath)
-	files, err := ioutil.ReadDir(fp)
-	if err != nil {
-		return err
-	}
-
-	tw := tabwriter.NewWriter(os.Stdout, 0, 8, 0, '\t', 0)
-	if cmd.Full {
-		fmt.Fprintln(tw, "Filename:\tTitle:\tURL:\tUpdated:\tFrequency:")
-	} else {
-		fmt.Fprintln(tw, "Filename:\tTitle:\tUpdated:")
-	}
-
-	for _, x := range files {
-		if x.IsDir() {
-			continue
-		}
-
-		fn := filepath.Join(fp, x.Name())
-		var p Podcast
-		err := LoadJSON(fn, &p)
-		if err != nil {
-			return err
-		}
-		if cmd.Full {
-			fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\n", x.Name(), p.Title, p.URL, p.Updated.Local().String(), p.Frequency.String())
-		} else {
-			fmt.Fprintf(tw, "%s\t%s\t%s\n", x.Name(), p.Title, p.Updated.Local().String())
-		}
-	}
-
-	tw.Flush()
-	return nil
-}
-
-func listPodcast(name string, full bool, since time.Time) error {
-	fn := feedFile(name)
-	rss, err := feed.NewRSSFromFile(fn)
-	if err != nil {
-		return err
-	}
-
-	m := log.Default.Msg
-	m("%s episodes:", rss.Title)
-	for _, ep := range rss.EpisodeList {
-		if ep.Date.Before(since) {
-			return nil
-		}
-		m("\t%s: %s", ep.Date.String(), ep.Title)
+	for _, pod := range list.List {
+		println(pod.Name)
 	}
 	return nil
 }

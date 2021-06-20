@@ -1,8 +1,9 @@
 # Seymour
-A command line podcast downloader with subscription support.
+A command line podcast downloader.
 
 ## Installing
-Ensure you have Go 1.11 or newer, and run this from a shell:
+Ensure you have Go 1.16 or newer, and run this from a shell:
+
 ```
 go get -u github.com/Urethramancer/Seymour
 ```

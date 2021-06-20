@@ -1,0 +1,7 @@
+github.com/Urethramancer/cross v0.5.1/go.mod h1:fDdlBbOHyb78KkGBNSM3auQbWBtLt0QzcmKytctpe9c=
+github.com/Urethramancer/daemon v0.3.0/go.mod h1:/T1hacQ495iR95N1l6qtceUY2i6gtcEwcemi6WGJ0n8=
+github.com/Urethramancer/signor v0.16.0 h1:Bj497Zebb4gYGzI225DYsBsvab9XaeLy5DRlXwB7gSw=
+github.com/Urethramancer/signor v0.16.0/go.mod h1:A8scGHYye/A3YEL8kasLWcfDHSQSZhQKgWHLaabqJfI=
+github.com/grimdork/xos v0.1.0 h1:zC2ll7sTgR8Dw0XtQO8BraJ400u8Wh+9x7pMAla/v0o=
+github.com/grimdork/xos v0.1.0/go.mod h1:8y/pSIr9T8pZUtCQW08Me3N0j3XFGJRrhSMn4YAUW/s=
+github.com/mgutz/str v1.2.0/go.mod h1:w1v0ofgLaJdoD0HpQ3fycxKD1WtxpjSo151pK/31q6w=
