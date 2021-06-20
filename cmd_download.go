@@ -47,7 +47,15 @@ func (cmd *DownloadCmd) Run(in []string) error {
 				if err != nil {
 					return err
 				}
-				pod.DownloadEpisodes(path, cmd.Start, cmd.Force)
+
+				start := cmd.Start
+				if cmd.Latest && len(pod.Episodes) > 0 {
+					start = pod.Episodes[len(pod.Episodes)-1].Number
+				}
+				if cmd.Mark {
+					pod.MarkDownloaded(start)
+				}
+				pod.DownloadEpisodes(path, start, cmd.Force)
 				return list.Save()
 			}
 		}
@@ -61,11 +69,14 @@ func (cmd *DownloadCmd) Run(in []string) error {
 		if err != nil {
 			return err
 		}
-		latest := 0
+		start := cmd.Start
 		if cmd.Latest && len(pod.Episodes) > 0 {
-			latest = pod.Episodes[len(pod.Episodes)-1].Number
+			start = pod.Episodes[len(pod.Episodes)-1].Number
 		}
-		pod.DownloadEpisodes(path, latest, cmd.Force)
+		if cmd.Mark {
+			pod.MarkDownloaded(start)
+		}
+		pod.DownloadEpisodes(path, start, cmd.Force)
 	}
 
 	return list.Save()
