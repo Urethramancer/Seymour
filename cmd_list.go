@@ -7,6 +7,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/Urethramancer/signor/opt"
@@ -41,8 +42,17 @@ func (cmd *ListCmd) Run(in []string) error {
 		return unknownPodcast(cmd.Name)
 	}
 
+	names := []string{}
+	count := 0
 	for _, pod := range list.List {
-		println(pod.Name)
+		x := fmt.Sprintf("%s - %d episodes", pod.Name, len(pod.Episodes))
+		count += len(pod.Episodes)
+		names = append(names, x)
 	}
+	sort.Strings(names)
+	for _, n := range names {
+		println(n)
+	}
+	fmt.Printf("%d episodes total.\n", count)
 	return nil
 }
