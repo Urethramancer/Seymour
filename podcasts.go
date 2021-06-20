@@ -123,7 +123,7 @@ func (pod *Podcast) DownloadEpisodes(path string, start int, force bool) {
 
 // MarkDownloaded marks all episodes up to this number as downloaded.
 func (pod *Podcast) MarkDownloaded(n int) {
-	for i := 1; i <= n; i++ {
+	for i := 0; i <= n; i++ {
 		pod.Downloaded[i] = true
 	}
 }
