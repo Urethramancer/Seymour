@@ -47,9 +47,16 @@ func (cmd *UpdateCmd) Run(in []string) error {
 	}
 
 	for _, pod := range list.List {
-		pod, err := list.AddFeed(pod.RSS)
-		if err != nil {
-			return err
+		if cmd.Replace {
+			_, err := list.AddFeed(pod.RSS)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := pod.Update()
+			if err != nil {
+				return err
+			}
 		}
 
 		fmt.Printf("Updated %s\n", pod.Name)
