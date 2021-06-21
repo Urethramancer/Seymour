@@ -19,7 +19,7 @@ import (
 const cfgname = "podcasts.json"
 
 func configName() string {
-	cp, err := xos.NewConfig("caster")
+	cp, err := xos.NewConfig("Seymour")
 	if err != nil {
 		return cfgname
 	}
