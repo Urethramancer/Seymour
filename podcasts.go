@@ -97,6 +97,46 @@ func (list *Podcasts) AddFeed(url string) (*Podcast, error) {
 	return pod, nil
 }
 
+// Update from latest feed.
+func (pod *Podcast) Update() error {
+	data, err := WebDownload(pod.RSS)
+	if err != nil {
+		return err
+	}
+
+	var rss RSS
+	d := xml.NewDecoder(strings.NewReader(string(data)))
+	d.Strict = false
+	err = d.Decode(&rss)
+	if err != nil {
+		return err
+	}
+
+	for _, ep := range rss.Channels[0].Episodes {
+		_, ok := pod.Downloaded[ep.Episode]
+		if ok {
+			continue
+		}
+
+		if len(pod.Episodes) > 0 && pod.Episodes[len(pod.Episodes)-1].Number != ep.Episode {
+			e := Episode{
+				Name:    fmt.Sprintf("%s %04d - %s", pod.Name, ep.Episode, ep.FileName()),
+				Updated: ep.PubDate,
+				Link:    ep.Enclosure.URL,
+				Number:  ep.Episode,
+			}
+			pod.Episodes = append(pod.Episodes, e)
+			pod.Downloaded[e.Number] = false
+		}
+	}
+
+	sort.SliceStable(pod.Episodes, func(i, j int) bool {
+		return pod.Episodes[i].Number < pod.Episodes[j].Number
+	})
+
+	return nil
+}
+
 // DownloadEpisodes of podcast.
 func (pod *Podcast) DownloadEpisodes(path string, start int, force bool) {
 	for _, ep := range pod.Episodes {
@@ -104,7 +144,7 @@ func (pod *Podcast) DownloadEpisodes(path string, start int, force bool) {
 			continue
 		}
 
-		if pod.Downloaded[ep.Number] && !force {
+		if pod.Downloaded[ep.Number] && !force && ep.Number != 0 {
 			fmt.Printf("Skipping already downloaded episode %d\n", ep.Number)
 			continue
 		}

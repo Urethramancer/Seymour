@@ -14,7 +14,8 @@ import (
 // UpdateCmd options.
 type UpdateCmd struct {
 	opt.DefaultHelp
-	Name string `placeholder:"PODCAST" help:"Specifying the name of a podcast updates only that."`
+	Name    string `placeholder:"PODCAST" help:"Specifying the name of a podcast updates only that."`
+	Replace bool   `short:"r" long:"replace" help:"Replace the episode list with the feed contents (remove links to episodes no longer listed)."`
 }
 
 func (cmd *UpdateCmd) Run(in []string) error {
@@ -29,9 +30,16 @@ func (cmd *UpdateCmd) Run(in []string) error {
 			return unknownPodcast(cmd.Name)
 		}
 
-		pod, err := list.AddFeed(pod.RSS)
-		if err != nil {
-			return err
+		if cmd.Replace {
+			_, err := list.AddFeed(pod.RSS)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := pod.Update()
+			if err != nil {
+				return err
+			}
 		}
 
 		fmt.Printf("Updated %s\n", pod.Name)
