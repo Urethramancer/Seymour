@@ -23,9 +23,14 @@ func (cmd *RemoveCmd) Run(in []string) error {
 	}
 
 	list := getPodcastList()
-	pod, ok := list.List[cmd.Podcast]
-	if !ok {
+	pod := list.Find(cmd.Podcast)
+	if pod == nil {
 		return unknownPodcast(cmd.Podcast)
+	}
+
+	a := askString(fmt.Sprintf("Really remove %s [y/N]? ", pod.Name))
+	if a != "y" && a != "Y" {
+		return nil
 	}
 
 	fmt.Printf("Removed %s\n", pod.Name)

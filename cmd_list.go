@@ -8,7 +8,6 @@ package main
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/Urethramancer/signor/opt"
 )
@@ -16,7 +15,7 @@ import (
 // ListCmd options.
 type ListCmd struct {
 	opt.DefaultHelp
-	Name string `placeholder:"PODCAST" help:"Specifying the name of a podcast lists its episodes instead."`
+	Name string `placeholder:"PODCAST" help:"Lists the episodes of a podcast instead (or first partial match)."`
 }
 
 func (cmd *ListCmd) Run(in []string) error {
@@ -26,20 +25,24 @@ func (cmd *ListCmd) Run(in []string) error {
 
 	list := getPodcastList()
 	if cmd.Name != "" {
-		needle := strings.ToLower(cmd.Name)
-		for k, pod := range list.List {
-			haystack := strings.ToLower(k)
-			if strings.Contains(haystack, needle) {
-				fmt.Printf("%s - %d episodes:\n", pod.Name, len(pod.Episodes))
-				for _, ep := range pod.Episodes {
-					fmt.Printf("\t%s (%s)\n", ep.Name, ep.Updated)
-				}
-				println()
-				return nil
-			}
+		pod := list.Find(cmd.Name)
+		if pod == nil {
+			return unknownPodcast(cmd.Name)
 		}
 
-		return unknownPodcast(cmd.Name)
+		names := []string{}
+		for _, ep := range pod.Episodes {
+			names = append(names, fmt.Sprintf("%s (%s)", ep.Name, ep.Updated))
+		}
+
+		sort.Strings(names)
+		fmt.Printf("%s - %d episodes:\n", pod.Name, len(pod.Episodes))
+		for _, x := range names {
+			fmt.Printf("\t%s\n", x)
+		}
+
+		println()
+		return nil
 	}
 
 	names := []string{}

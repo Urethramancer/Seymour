@@ -25,8 +25,8 @@ func (cmd *UpdateCmd) Run(in []string) error {
 
 	list := getPodcastList()
 	if cmd.Name != "" {
-		pod, ok := list.List[cmd.Name]
-		if !ok {
+		pod := list.Find(cmd.Name)
+		if pod == nil {
 			return unknownPodcast(cmd.Name)
 		}
 
