@@ -9,7 +9,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
@@ -28,7 +27,7 @@ type Podcast struct {
 	// RSS feed for podcast.
 	RSS string `json:"rss"`
 	// Episodes ordered from most recent to oldest.
-	Episodes []Episode `json:"episodes"`
+	Episodes map[string]Episode `json:"episodes"`
 	// Downloaded episodes list.
 	Downloaded map[int]bool
 }
@@ -48,6 +47,19 @@ func getPodcastList() *Podcasts {
 	}
 
 	return list
+}
+
+// Find first matching podcast by name.
+func (list *Podcasts) Find(name string) *Podcast {
+	needle := strings.ToLower(name)
+	for k, pod := range list.List {
+		haystack := strings.ToLower(k)
+		if strings.Contains(haystack, needle) {
+			return pod
+		}
+	}
+
+	return nil
 }
 
 // AddFeed from URL or file.
@@ -72,6 +84,7 @@ func (list *Podcasts) AddFeed(url string) (*Podcast, error) {
 		Name:       c.Title,
 		Website:    c.Website,
 		RSS:        url,
+		Episodes:   make(map[string]Episode),
 		Downloaded: make(map[int]bool),
 	}
 
@@ -82,12 +95,8 @@ func (list *Podcasts) AddFeed(url string) (*Podcast, error) {
 			Link:    ep.Enclosure.URL,
 			Number:  ep.Episode,
 		}
-		pod.Episodes = append(pod.Episodes, e)
+		pod.Episodes[e.Name] = e
 	}
-
-	sort.SliceStable(pod.Episodes, func(i, j int) bool {
-		return pod.Episodes[i].Number < pod.Episodes[j].Number
-	})
 
 	old, ok := list.List[pod.Name]
 	if ok {
@@ -118,21 +127,15 @@ func (pod *Podcast) Update() error {
 			continue
 		}
 
-		if len(pod.Episodes) > 0 && pod.Episodes[len(pod.Episodes)-1].Number != ep.Episode {
-			e := Episode{
-				Name:    fmt.Sprintf("%s %04d - %s", pod.Name, ep.Episode, ep.FileName()),
-				Updated: ep.PubDate,
-				Link:    ep.Enclosure.URL,
-				Number:  ep.Episode,
-			}
-			pod.Episodes = append(pod.Episodes, e)
-			pod.Downloaded[e.Number] = false
+		e := Episode{
+			Name:    fmt.Sprintf("%s %04d - %s", pod.Name, ep.Episode, ep.FileName()),
+			Updated: ep.PubDate,
+			Link:    ep.Enclosure.URL,
+			Number:  ep.Episode,
 		}
+		pod.Episodes[e.Name] = e
+		pod.Downloaded[e.Number] = false
 	}
-
-	sort.SliceStable(pod.Episodes, func(i, j int) bool {
-		return pod.Episodes[i].Number < pod.Episodes[j].Number
-	})
 
 	return nil
 }
