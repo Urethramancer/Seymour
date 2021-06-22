@@ -6,12 +6,10 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/grimdork/xos"
 )
@@ -62,15 +60,12 @@ func (list *Podcasts) Save() error {
 
 // SetDownloadPath configures the download directory and saves.
 func (list *Podcasts) SetDownloadPath() error {
-	r := bufio.NewReader(os.Stdin)
 	if list.Path == "" {
 		p, _ := os.UserHomeDir()
 		list.Path = filepath.Join(p, "Podcasts")
 	}
 
-	fmt.Printf("Enter your preferred podcast download path [%s]: ", list.Path)
-	newpath, _ := r.ReadString('\n')
-	newpath = strings.ReplaceAll(newpath, "\n", "")
+	newpath := askString(fmt.Sprintf("Enter your preferred podcast download path [%s]: ", list.Path))
 	if newpath != "" {
 		list.Path = newpath
 	}
