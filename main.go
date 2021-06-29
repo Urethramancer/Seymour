@@ -13,7 +13,7 @@ var o struct {
 	Remove   RemoveCmd   `command:"remove" aliases:"rm" help:"Remove a podcast."`
 	List     ListCmd     `command:"list" aliases:"ls" help:"List podcasts or episodes."`
 	Update   UpdateCmd   `command:"update" aliases:"up" help:"Update podcast(s)."`
-	Download DownloadCmd `command:"downlaod" aliases:"dl" help:"Download podcast episodes."`
+	Download DownloadCmd `command:"download" aliases:"dl" help:"Download podcast episodes."`
 }
 
 func main() {
